@@ -90,3 +90,118 @@ export const createGPSDict = (lat, lng) => {
 
   return gps;
 };
+/**
+ * Convert a decimal number to a rational [numerator, denominator].
+ * Simplified approach: use 100/1000/etc as denominator.
+ */
+function toRational(num) {
+  if (num === undefined || num === null) return null;
+  const m = String(num).split('.');
+  let denominator = 1;
+  if (m.length > 1) {
+    denominator = Math.pow(10, m[1].length);
+  }
+  const numerator = Math.round(num * denominator);
+  if (isNaN(numerator) || isNaN(denominator)) return null;
+  return [numerator, denominator];
+}
+
+/**
+ * Restore original EXIF data from Expo's flat format to piexif object.
+ * Useful when image conversion strips metadata (e.g. HEIC -> JPEG).
+ */
+export const restoreOriginalExif = (exifObj, originalExif) => {
+  if (!originalExif) return exifObj;
+
+  // Initialize IFDs if missing
+  if (!exifObj['0th']) exifObj['0th'] = {};
+  if (!exifObj['Exif']) exifObj['Exif'] = {};
+
+  // --- 0th IFD ---
+  // Make (271)
+  if (!exifObj['0th'][271] && originalExif.Make) {
+    exifObj['0th'][271] = originalExif.Make;
+  }
+  // Model (272)
+  if (!exifObj['0th'][272] && originalExif.Model) {
+    exifObj['0th'][272] = originalExif.Model;
+  }
+  // Software (305)
+  if (!exifObj['0th'][305] && originalExif.Software) {
+    exifObj['0th'][305] = originalExif.Software;
+  }
+
+  // --- Exif IFD ---
+
+  // ExposureTime (33434) - Rational
+  if (!exifObj['Exif'][33434] && originalExif.ExposureTime) {
+    exifObj['Exif'][33434] = toRational(originalExif.ExposureTime);
+  }
+
+  // FNumber (33437) - Rational
+  if (!exifObj['Exif'][33437] && originalExif.FNumber) {
+    exifObj['Exif'][33437] = toRational(originalExif.FNumber);
+  }
+
+  // ISOSpeedRatings (34855) - Short
+  if (!exifObj['Exif'][34855] && originalExif.ISOSpeedRatings) {
+    exifObj['Exif'][34855] = originalExif.ISOSpeedRatings;
+  }
+
+  // DateTimeOriginal (36867) - String
+  if (!exifObj['Exif'][36867] && originalExif.DateTimeOriginal) {
+    exifObj['Exif'][36867] = originalExif.DateTimeOriginal;
+  }
+
+  // DateTimeDigitized (36868) - String
+  if (!exifObj['Exif'][36868] && originalExif.DateTimeDigitized) {
+    exifObj['Exif'][36868] = originalExif.DateTimeDigitized;
+  }
+
+  // ShutterSpeedValue (37377) - SRational
+  if (!exifObj['Exif'][37377] && originalExif.ShutterSpeedValue) {
+    exifObj['Exif'][37377] = toRational(originalExif.ShutterSpeedValue);
+  }
+
+  // ApertureValue (37378) - Rational
+  if (!exifObj['Exif'][37378] && originalExif.ApertureValue) {
+    exifObj['Exif'][37378] = toRational(originalExif.ApertureValue);
+  }
+
+  // ExposureBiasValue (37380) - SRational
+  if (!exifObj['Exif'][37380] && originalExif.ExposureBiasValue) {
+    exifObj['Exif'][37380] = toRational(originalExif.ExposureBiasValue);
+  }
+
+  // MeteringMode (37383) - Short
+  if (!exifObj['Exif'][37383] && originalExif.MeteringMode) {
+    exifObj['Exif'][37383] = originalExif.MeteringMode;
+  }
+
+  // Flash (37385) - Short
+  if (!exifObj['Exif'][37385] && originalExif.Flash) {
+    exifObj['Exif'][37385] = originalExif.Flash;
+  }
+
+  // FocalLength (37386) - Rational
+  if (!exifObj['Exif'][37386] && originalExif.FocalLength) {
+    exifObj['Exif'][37386] = toRational(originalExif.FocalLength);
+  }
+
+  // WhiteBalance (41987) - Short
+  if (!exifObj['Exif'][41987] && originalExif.WhiteBalance) {
+    exifObj['Exif'][41987] = originalExif.WhiteBalance;
+  }
+
+  // LensMake (42035) - String
+  if (!exifObj['Exif'][42035] && originalExif.LensMake) {
+    exifObj['Exif'][42035] = originalExif.LensMake;
+  }
+
+  // LensModel (42036) - String
+  if (!exifObj['Exif'][42036] && originalExif.LensModel) {
+    exifObj['Exif'][42036] = originalExif.LensModel;
+  }
+
+  return exifObj;
+};

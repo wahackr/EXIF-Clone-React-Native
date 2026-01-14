@@ -1,7 +1,8 @@
 import * as FileSystem from 'expo-file-system/legacy';
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as MediaLibrary from 'expo-media-library';
 import piexif from 'piexifjs';
-import { createGPSDict } from './gpsUtils';
+import { createGPSDict, restoreOriginalExif } from './gpsUtils';
 
 /**
  * Transfer GPS data (and optionally date) from source to targets.
@@ -34,11 +35,18 @@ export const transferEXIF = async (sourceData, targetPhotos, options, onProgress
       let finalUri = target.uri;
 
       if (!isJpeg) {
-        console.log(`[Transfer] Skipped: Not a JPEG (${target.fileName})`);
-        errors.push({ file: target.fileName, error: 'Skipped: Not a JPEG (HEIC/PNG not compatible without conversion)' });
-        skippedCount++; // Mark as skipped
-        if (onProgress) onProgress(i + 1, targetPhotos.length);
-        continue;
+        console.log(`[Transfer] File is not JPEG (${target.fileName}). Converting to JPEG for EXIF support...`);
+        // Convert to JPEG so we can insert EXIF
+        const manipResult = await ImageManipulator.manipulateAsync(
+          target.uri,
+          [],
+          { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+        );
+        finalUri = manipResult.uri;
+        // const convertedInfo = await FileSystem.getInfoAsync(finalUri); 
+        // console.log(`[Transfer] Converted Size: ${convertedInfo.size} bytes`);
+      } else {
+        console.log(`[Transfer] File is already JPEG. Keeping original.`);
       }
 
       // 2. Read file as Base64
@@ -48,7 +56,15 @@ export const transferEXIF = async (sourceData, targetPhotos, options, onProgress
 
       // 3. Load existing EXIF
       const dataUri = 'data:image/jpeg;base64,' + base64;
-      const exifObj = piexif.load(dataUri);
+      let exifObj = piexif.load(dataUri);
+
+      // Restore original metadata ONLY if we converted the file (HEIC -> JPEG strips metadata)
+      // Native JPEGs already have their correct, full EXIF loaded above.
+      if (target.exif && !isJpeg) {
+        console.log(`[Transfer] Restoring original EXIF for converted file...`);
+        exifObj = restoreOriginalExif(exifObj, target.exif);
+        console.log(`[Transfer] EXIF restoration complete.`);
+      }
 
       // 4. Update GPS
       const hasGPS = exifObj.GPS && Object.keys(exifObj.GPS).length > 0;
@@ -83,7 +99,11 @@ export const transferEXIF = async (sourceData, targetPhotos, options, onProgress
       const newBase64 = newCtx.replace(/^data:image\/[a-z]+;base64,/, '');
 
       // 7. Write to temp file
-      const tempUri = FileSystem.documentDirectory + 'temp_' + target.fileName;
+      const originalName = target.fileName || 'image';
+      const nameWithoutExt = originalName.replace(/\.[^/.]+$/, ""); // Strip extension
+      const newFileName = `${nameWithoutExt}_exif.jpg`;
+      const tempUri = FileSystem.documentDirectory + newFileName;
+
       await FileSystem.writeAsStringAsync(tempUri, newBase64, {
         encoding: 'base64',
       });

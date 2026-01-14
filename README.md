@@ -10,9 +10,9 @@ A powerful iOS application built with React Native and Expo to clone GPS metadat
 
 - **Source Selection**: Pick a reference photo to extract valid GPS coordinates.
 - **Location Preview**: Visualize the source coordinate on an embedded Apple Map.
-- **Batch Transfer**: Select multiple target photos to update simultaneously.
-- **Smart Filtering**: Automatically ignores non-JPEG files (like HEIC) during selection to ensure compatibility and preserve image quality.
-- **Safe "Save as Copy"**: Modified photos are strictly saved as **new copies** in a dedicated **"EXIF Clone"** album. Your original photos are never touched or overwritten.
+- **Target Selection**: Select multiple photos to update. 
+  - *Smart Filtering*: Automatically ignores non-JPEG files (like HEIC) to preserve image quality and ensure compatibility.
+- **Save as Copy**: Modified photos are saved as **new copies** in a dedicated **"EXIF Clone"** album in your Photos app. This ensures your originals are never overwritten.
 - **Creation Date Sync**: Optional toggle to copy the original creation date/time from the source photo to targets.
 - **Overwrite Protection**: "Overwrite Existing GPS" option acts as a safeguard. By default, the app skips photos that already have GPS data to prevent accidental data loss.
 
