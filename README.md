@@ -63,3 +63,52 @@ A powerful iOS application built with React Native and Expo to clone GPS metadat
 
 -   `src/ui/`: Contains UI components and screens (e.g., `HomeScreen.js`).
 -   `src/libs/`: Contains logic for GPS parsing (`gpsUtils.js`) and the core transfer engine (`transferUtils.js`).
+
+
+
+## Deployment to iPhone
+
+### Prerequisites
+- macOS with Xcode installed
+- Apple ID (for code signing)
+- Physical iPhone connected via USB
+
+### Step 1: Prebuild Native Projects
+Generate the native iOS project structure:
+```bash
+npx expo prebuild --clean
+```
+
+### Step 2: Export for iOS
+Create the optimized production bundle:
+```bash
+npx expo export --platform ios
+```
+
+### Step 3: Configure Xcode Signing
+1. Open the workspace in Xcode:
+   ```bash
+   open ios/*.xcworkspace
+   ```
+2. In Xcode, click the blue project icon in the left sidebar
+3. Select your app under **Targets**
+4. Navigate to **Signing & Capabilities** tab
+5. Under **Team**, select your **Personal Team** (Apple ID)
+
+### Step 4: Build for Release
+1. In Xcode menu, go to **Product** → **Scheme** → **Edit Scheme...**
+2. Select **Run** in the left sidebar
+3. Change **Build Configuration** to **Release**
+4. Click **Close**
+
+### Step 5: Install on Device
+1. Connect your iPhone via USB to your Mac
+2. Select your iPhone as the build target in Xcode's device dropdown
+3. Press **Cmd + R** (or click the Play button) to build and install
+
+### Step 6: Trust Developer Certificate
+1. On your iPhone, go to **Settings** → **General** → **VPN & Device Management**
+2. Tap on your developer certificate
+3. Tap **Trust** and confirm
+
+Your app should now launch successfully on your iPhone!
